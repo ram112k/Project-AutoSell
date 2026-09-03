@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Перекуп</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial;
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            background: #111;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .tab.active {
+            background: #fff;
+            color: #000;
+        }
+        .card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+        }
+        .emoji {
+            font-size: 25px;
+            margin-right: 10px;
+        }
+        .name {
+            font-weight: bold;
+        }
+        .price {
+            color: #4caf50;
+        }
+        button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #444;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+        .modal-box {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            max-width: 350px;
+            margin: 80px auto;
+            padding: 20px;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .modal-message {
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            margin: 8px 0;
+        }
+        .btn-row {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .btn-row button {
+            flex: 1;
+        }
+        .notification {
+            background: #332b00;
+            border: 1px solid #ff9800;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .green {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+        .red {
+            background: #f44336;
+            border-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span>💰 <span id="bal">₽ 1 250 000</span></span>
+            <span>🚗 <span id="gar">0</span></span>
+        </div>
+
+        <div class="notification" id="notif">
+            <div id="notifText"></div>
+            <div class="btn-row">
+                <button class="green" onclick="acceptNotif()">✅ Принять</button>
+                <button class="red" onclick="declineNotif()">❌ Отклонить</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" id="marketTab" onclick="showMarket()">🛒 Рынок</div>
+            <div class="tab" id="garageTab" onclick="showGarage()">🚗 Гараж</div>
+        </div>
+
+        <div id="list"></div>
+    </div>
+
+    <div class="modal" id="tradeModal">
+        <div class="modal-box">
+            <div class="modal-title" id="tradeTitle"></div>
+            <div id="tradePrice" style="color:#4caf50;margin-bottom:10px;"></div>
+            <div class="modal-message" id="tradeMsg"></div>
+            <input type="number" id="offerInput" placeholder="Ваша цена">
+            <div class="btn-row">
+                <button onclick="makeOffer()">💬 Предложить</button>
+                <button onclick="acceptCounter()" id="counterBtn" disabled>🤝 Согласиться</button>
+            </div>
+            <div class="btn-row">
+                <button onclick="buyFull()">✅ Купить за полную</button>
+            </div>
+            <div class="btn-row">
+                <button onclick="closeTrade()">✕ Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="sellModal">
+        <div class="modal-box">
+            <div class="modal-title">Продажа</div>
+            <div class="modal-message" id="sellMsg"></div>
+            <div class="btn-row">
+                <button class="green" onclick="confirmSell()">📤 Выставить</button>
+                <button onclick="closeSell()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Машины
+        var cars = [
+            {id:1, name:"Lada Granta", price:850000, emoji:"🚗"},
+            {id:2, name:"Kia Rio", price:1100000, emoji:"🚗"},
+            {id:3, name:"Hyundai Solaris", price:1050000, emoji:"🚗"},
+            {id:4, name:"Volkswagen Polo", price:1150000, emoji:"🚗"},
+            {id:5, name:"Toyota Camry", price:1950000, emoji:"🚙"},
+            {id:6, name:"BMW 3 series", price:2800000, emoji:"🏎️"},
+            {id:7, name:"Mercedes C-Class", price:3100000, emoji:"🚘"},
+            {id:8, name:"Audi A4", price:2700000, emoji:"🚗"},
+            {id:9, name:"Skoda Octavia", price:1350000, emoji:"🚙"},
+            {id:10, name:"Renault Logan", price:780000, emoji:"🚗"},
+            {id:11, name:"Ford Focus", price:1200000, emoji:"🚙"},
+            {id:12, name:"Mazda 6", price:1700000, emoji:"🚗"},
+            {id:13, name:"Nissan Qashqai", price:1550000, emoji:"🚙"},
+            {id:14, name:"Mitsubishi Outlander", price:1900000, emoji:"🚘"},
+            {id:15, name:"Honda CR-V", price:2200000, emoji:"🚙"},
+            {id:16, name:"Subaru Forester", price:2400000, emoji:"🚗"},
+            {id:17, name:"Lexus ES", price:3400000, emoji:"🚘"},
+            {id:18, name:"Volvo XC60", price:3600000, emoji:"🚙"},
+            {id:19, name:"Jeep Grand Cherokee", price:4200000, emoji:"🚙"},
+            {id:20, name:"Porsche Macan", price:6000000, emoji:"🏎️"},
+            {id:21, name:"Yamaha R1", price:1600000, emoji:"🏍️"},
+            {id:22, name:"Harley-Davidson Sportster", price:1400000, emoji:"🏍️"},
+            {id:23, name:"Toyota Yaris", price:400000, emoji:"🚗"},
+            {id:24, name:"Нива Travel", price:500000, emoji:"🚙"},
+            {id:25, name:"Suzuki", price:300000, emoji:"🏍️"},
+            {id:26, name:"Мопед Альфа", price:76000, emoji:"🛵"},
+            {id:27, name:"ИЖ Юпитер", price:200000, emoji:"🏍️"},
+            {id:28, name:"Skoda Octavia", price:1000000, emoji:"🚙"},
+            {id:29, name:"Минск ММВЗ", price:150000, emoji:"🏍️"}
+        ];
+
+        var balance = 1250000;
+        var garage = 0;
+        var sold = [];
+        var owned = [];
+        var forSale = [];
+        var currentTab = "market";
+        var currentCar = null;
+        var counterPrice = null;
+        var notifData = null;
+
+        function fmt(p) {
+            return "₽ " + p.toLocaleString("ru-RU");
+        }
+
+        function updateUI() {
+            document.getElementById("bal").textContent = fmt(balance);
+            document.getElementById("gar").textContent = garage;
+            renderList();
+        }
+
+        function showMarket() {
+            currentTab = "market";
+            document.getElementById("marketTab").classList.add("active");
+            document.getElementById("garageTab").classList.remove("active");
+            renderList();
+        }
+
+        function showGarage() {
+            currentTab = "garage";
+            document.getElementById("garageTab").classList.add("active");
+            document.getElementById("marketTab").classList.remove("active");
+            renderList();
+        }
+
+        function renderList() {
+            var list = document.getElementById("list");
+            list.innerHTML = "";
+            
+            if (currentTab === "market") {
+                for (var i = 0; i < cars.length; i++) {
+                    if (sold.indexOf(cars[i].id) !== -1) continue;
+                    var div = document.createElement("div");
+                    div.className = "card";
+                    div.innerHTML = 
+                        '<span class="emoji">' + cars[i].emoji + '</span>' +
+                        '<div style="flex:1;">' +
+                            '<div class="name">' + cars[i].name + '</div>' +
+                            '<div class="price">' + fmt(cars[i].price) + '</div>' +
+                        '</div>' +
+                        '<button onclick="openTrade(' + cars[i].id + ')">Торговаться</button>';
+                    list.appendChild(div);
+                }
+                if (list.children.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Все ТС проданы</div>';
+                }
+            } else {
+                if (owned.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Гараж пуст</div>';
+                } else {
+                    for (var j = 0; j < owned.length; j++) {
+                        var isSale = forSale.indexOf(owned[j].id) !== -1;
+                        var div2 = document.createElement("div");
+                        div2.className = "card";
+                        div2.innerHTML = 
+                            '<span class="emoji">' + owned[j].emoji + '</span>' +
+                            '<div style="flex:1;">' +
+                                '<div class="name">' + owned[j].name + '</div>' +
+                                '<div class="price">' + fmt(owned[j].price) + '</div>' +
+                                (isSale ? '<div style="color:#ff9800;font-size:12px;">На продаже</div>' : '') +
+                            '</div>' +
+                            (isSale ? '<span style="color:#666;">Ожидание</span>' : 
+                            '<button onclick="openSell(' + owned[j].id + ')">Продать</button>');
+                        list.appendChild(div2);
+                    }
+                }
+            }
+        }
+
+        function openTrade(id) {
+            for (var i = 0; i < cars.length; i++) {
+                if (cars[i].id === id) {
+                    currentCar = cars[i];
+                    break;
+                }
+            }
+            if (!currentCar) return;
+            counterPrice = null;
+            document.getElementById("tradeTitle").textContent = currentCar.emoji + " " + currentCar.name;
+            document.getElementById("tradePrice").textContent = "Цена: " + fmt(currentCar.price);
+            document.getElementById("tradeMsg").textContent = "Продавец: Здравствуйте!";
+            document.getElementById("offerInput").value = "";
+            document.getElementById("counterBtn").disabled = true;
+            document.getElementById("tradeModal").style.display = "block";
+        }
+
+        function closeTrade() {
+            document.getElementById("tradeModal").style.display = "none";
+            currentCar = null;
+        }
+
+        function makeOffer() {
+            if (!currentCar) return;
+            var offer = parseInt(document.getElementById("offerInput").value);
+            if (!offer || offer <= 0) {
+                document.getElementById("tradeMsg").textContent = "Введите цену!";
+                return;
+            }
+            var asking = currentCar.price;
+            var ratio = offer / asking;
+            
+            if (offer >= asking) {
+                buy(offer);
+            } else if (ratio >= 0.93) {
+                buy(offer);
+            } else if (ratio >= 0.8) {
+                counterPrice = Math.round(asking * 0.93);
+                document.getElementById("tradeMsg").textContent = "Чуть выше? " + fmt(counterPrice);
+                document.getElementById("counterBtn").disabled = false;
+            } else if (ratio >= 0.6) {
+                counterPrice = Math.round(asking * 0.9);
+                document.getElementById("tradeMsg").textContent = "Могу уступить до " + fmt(counterPrice);
+                document.getElementById("counterBtn").disabled = false;
+            } else {
+                counterPrice = Math.round(asking * 0.95);
+                document.getElementById("tradeMsg").textContent = "Слишком низко! Минимум " + fmt(counterPrice);
+                document.getElementById("counterBtn").disabled = false;
+            }
+        }
+
+        function acceptCounter() {
+            if (!currentCar || !counterPrice) return;
+            buy(counterPrice);
+        }
+
+        function buyFull() {
+            if (!currentCar) return;
+            buy(currentCar.price);
+        }
+
+        function buy(price) {
+            if (balance < price) {
+                document.getElementById("tradeMsg").textContent = "Недостаточно средств!";
+                return;
+            }
+            balance -= price;
+            garage++;
+            sold.push(currentCar.id);
+            owned.push({id: currentCar.id, name: currentCar.name, price: currentCar.price, emoji: currentCar.emoji});
+            document.getElementById("tradeMsg").textContent = "✅ Куплено!";
+            document.getElementById("counterBtn").disabled = true;
+            updateUI();
+        }
+
+        function openSell(id) {
+            for (var i = 0; i < owned.length; i++) {
+                if (owned[i].id === id) {
+                    currentCar = owned[i];
+                    break;
+                }
+            }
+            if (!currentCar || forSale.indexOf(id) !== -1) return;
+            document.getElementById("sellMsg").textContent = "Выставить " + currentCar.emoji + " " + currentCar.name + "?";
+            document.getElementById("sellModal").style.display = "block";
+        }
+
+        function closeSell() {
+            document.getElementById("sellModal").style.display = "none";
+            currentCar = null;
+        }
+
+        function confirmSell() {
+            if (!currentCar) return;
+            forSale.push(currentCar.id);
+            var carForSale = currentCar;
+            closeSell();
+            updateUI();
+            
+            // МОМЕНТАЛЬНОЕ ПРЕДЛОЖЕНИЕ
+            var mult = 0.95 + Math.random() * 0.2;
+            var offerPrice = Math.round(carForSale.price * mult);
+            notifData = {id: carForSale.id, name: carForSale.name, emoji: carForSale.emoji, price: offerPrice};
+            document.getElementById("notifText").textContent = 
+                carForSale.emoji + " Покупатель предлагает " + fmt(offerPrice) + " за " + carForSale.name;
+            document.getElementById("notif").style.display = "block";
+        }
+
+        function acceptNotif() {
+            if (!notifData) return;
+            balance += notifData.price;
+            garage--;
+            owned = owned.filter(function(c) { return c.id !== notifData.id; });
+            forSale = forSale.filter(function(id) { return id !== notifData.id; });
+            document.getElementById("notif").style.display = "none";
+            notifData = null;
+            updateUI();
+        }
+
+        function declineNotif() {
+            if (!notifData) return;
+            forSale = forSale.filter(function(id) { return id !== notifData.id; });
+            document.getElementById("notif").style.display = "none";
+            notifData = null;
+            updateUI();
+        }
+
+        // ЗАПУСК
+        updateUI();
+    </script>
+</body>
+</html>
