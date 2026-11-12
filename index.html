@@ -1,329 +1,841 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Перекуп</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:#f0f2f5;font-family:Arial,sans-serif;min-height:100vh}
-        .app{max-width:420px;margin:0 auto;background:#f0f2f5;min-height:100vh}
-        .header{background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e4e6eb}
-        .logo{font-size:20px;font-weight:800;color:#0091d9}
-        .badge{padding:6px 10px;border-radius:6px;font-size:12px;font-weight:700}
-        .badge-balance{background:#e8f4fd;color:#0091d9}
-        .badge-garage{background:#0091d9;color:#fff}
-        .event-banner{background:linear-gradient(135deg,#0091d9,#7c3aed);padding:12px;text-align:center;color:#fff;font-weight:700;font-size:14px}
-        .tabs{display:flex;background:#fff;border-bottom:1px solid #e4e6eb}
-        .tab{flex:1;padding:12px;text-align:center;cursor:pointer;font-weight:600;font-size:14px;color:#65676b;border-bottom:3px solid transparent}
-        .tab.active{color:#0091d9;border-bottom-color:#0091d9}
-        .list{padding:10px;display:flex;flex-direction:column;gap:10px}
-        .card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e4e6eb}
-        .card.event{border:2px solid #0091d9;box-shadow:0 0 12px rgba(0,145,217,0.2)}
-        .card-img{width:100%;height:140px;object-fit:cover;display:block;background:#e4e6eb}
-        .card-body{padding:12px}
-        .card-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
-        .card-price-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-        .card-price{font-size:17px;font-weight:800;color:#0091d9}
-        .card-old-price{font-size:12px;color:#999;text-decoration:line-through}
-        .discount{background:#fff3e0;color:#ff6f00;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
-        .btn{display:inline-block;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px}
-        .btn:active{transform:scale(0.96)}
-        .btn-primary{background:#0091d9;color:#fff}
-        .btn-success{background:#10b981;color:#fff}
-        .btn-danger{background:#ef4444;color:#fff}
-        .btn-secondary{background:#e4e6eb;color:#1a1a2e}
-        .btn:disabled{opacity:0.4;cursor:not-allowed}
-        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center}
-        .modal-overlay.show{display:flex}
-        .modal{background:#fff;border-radius:10px;width:90%;max-width:360px;padding:18px}
-        .modal-title{font-size:17px;font-weight:700;margin-bottom:4px}
-        .modal-price{color:#0091d9;font-weight:700;font-size:14px}
-        .modal-msg{background:#f0f2f5;padding:10px;border-radius:6px;font-size:13px;margin:10px 0}
-        .modal-input{width:100%;padding:10px;border:2px solid #e4e6eb;border-radius:6px;font-size:14px;outline:none}
-        .modal-input:focus{border-color:#0091d9}
-        .btn-row{display:flex;gap:6px;margin-top:10px}
-        .btn-row .btn{flex:1}
-        .notification{background:#e8f4fd;border:2px solid #0091d9;border-radius:8px;padding:12px;margin:10px;display:none}
-        .notification.show{display:block}
-        .notif-text{font-size:13px;margin-bottom:8px;font-weight:500}
-        .empty{text-align:center;padding:30px;color:#999;font-size:14px}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DarkChat</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  html, body { height: 100%; }
+  body {
+    background: #0e0e10; color: #e4e4e7;
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app { display: flex; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
+
+  /* ===== Сайдбар ===== */
+  .sidebar {
+    width: 320px; background: #16161a; border-right: 1px solid #26262b;
+    display: flex; flex-direction: column; flex-shrink: 0; min-height: 0;
+  }
+  .sidebar-header {
+    padding: 16px; border-bottom: 1px solid #26262b;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .user-badge { display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: #3a3a42;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 15px; color: #fff; flex-shrink: 0;
+  }
+  .avatar.premium {
+    background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+    background-size: 300% 300%; animation: grad 6s ease infinite;
+  }
+  @keyframes grad { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+  .nickname { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nickname.premium {
+    background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+    background-size: 300% 100%; -webkit-background-clip: text; background-clip: text;
+    color: transparent; animation: grad 4s linear infinite; font-weight: 600;
+  }
+  .btn-icon {
+    background: #26262b; border: none; color: #a1a1aa; width: 34px; height: 34px;
+    border-radius: 8px; cursor: pointer; font-size: 16px; transition: .2s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-icon:hover { background: #33333a; color: #fff; }
+
+  .tabs { display: flex; padding: 8px; gap: 4px; flex-shrink: 0; }
+  .tab {
+    flex: 1; padding: 8px 4px; background: none; border: none; color: #71717a;
+    border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 500; transition: .2s;
+  }
+  .tab.active { background: #26262b; color: #fff; }
+
+  .chat-list { flex: 1; overflow-y: auto; min-height: 0; }
+  .chat-item {
+    padding: 12px 16px; display: flex; gap: 12px; align-items: center;
+    cursor: pointer; transition: .15s;
+  }
+  .chat-item:hover { background: #1c1c21; }
+  .chat-item.active { background: #232329; }
+  .chat-info { flex: 1; min-width: 0; }
+  .chat-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-last { font-size: 12px; color: #71717a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .badge { background: #4b6bfb; color: #fff; font-size: 10px; padding: 1px 7px; border-radius: 10px; margin-left: 4px; }
+  .badge.channel { background: #52525b; }
+  .badge.public { background: #166534; color: #86efac; }
+  .empty-list { padding: 24px; text-align: center; color: #52525b; font-size: 13px; }
+
+  /* ===== Основная область ===== */
+  .main { flex: 1; display: flex; flex-direction: column; background: #0e0e10; min-width: 0; min-height: 0; }
+  .chat-header {
+    padding: 14px 20px; border-bottom: 1px solid #26262b;
+    display: flex; align-items: center; gap: 12px; min-height: 64px;
+    flex-shrink: 0;
+  }
+  .back-btn {
+    display: none; background: none; border: none; color: #a1a1aa;
+    font-size: 22px; cursor: pointer; padding: 4px 8px; margin-left: -8px; flex-shrink: 0;
+  }
+  .messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 4px;
+    min-height: 0; overscroll-behavior: contain;
+  }
+  .msg { display: flex; gap: 10px; max-width: 75%; padding: 6px 0; }
+  .msg .bubble {
+    background: #1c1c21; padding: 8px 12px; border-radius: 12px; font-size: 14px;
+    line-height: 1.4; word-wrap: break-word; word-break: break-word;
+  }
+  .msg.own { align-self: flex-end; flex-direction: row-reverse; }
+  .msg.own .bubble { background: #2b3a68; }
+  .msg-meta { font-size: 11px; color: #71717a; margin-top: 2px; }
+  .msg-author { font-size: 12px; font-weight: 600; color: #a1a1aa; margin-bottom: 2px; }
+  .msg-author.premium {
+    background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+    background-size: 300% 100%; -webkit-background-clip: text; background-clip: text;
+    color: transparent; animation: grad 4s linear infinite;
+  }
+
+  /* ===== Поле ввода ===== */
+  .composer {
+    padding: 12px 16px;
+    border-top: 1px solid #26262b;
+    display: flex; gap: 10px; align-items: center;
+    background: #0e0e10;
+    flex-shrink: 0;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .composer input {
+    flex: 1; background: #1c1c21; border: 1px solid #26262b; border-radius: 10px;
+    padding: 12px 16px; color: #e4e4e7; font-size: 16px; outline: none; min-width: 0;
+  }
+  .composer input:focus { border-color: #4b6bfb; }
+  .composer input::placeholder { color: #52525b; }
+  .send-btn {
+    background: #4b6bfb; border: none; color: #fff; width: 44px; height: 44px; border-radius: 10px;
+    cursor: pointer; font-size: 18px; transition: .2s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .send-btn:hover { background: #3a55d4; }
+  .send-btn:active { transform: scale(.95); }
+
+  .empty {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: #52525b; font-size: 15px; flex-direction: column; gap: 8px; text-align: center; padding: 20px;
+  }
+
+  /* ===== Модалки ===== */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none;
+    align-items: center; justify-content: center; z-index: 100; padding: 16px;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: #16161a; border: 1px solid #26262b; border-radius: 14px;
+    padding: 24px; width: 380px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    animation: pop .2s ease; position: relative; max-height: 90vh; overflow-y: auto;
+  }
+  @keyframes pop { from { transform: scale(.95); opacity: 0; } }
+  .modal h2 { font-size: 18px; margin-bottom: 18px; }
+  .modal label { font-size: 13px; color: #a1a1aa; display: block; margin-bottom: 6px; margin-top: 14px; }
+  .modal input {
+    width: 100%; background: #1c1c21; border: 1px solid #26262b; border-radius: 8px;
+    padding: 10px 12px; color: #e4e4e7; font-size: 16px; outline: none;
+  }
+  .modal input:focus { border-color: #4b6bfb; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn {
+    flex: 1; padding: 11px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 500; transition: .2s;
+  }
+  .btn-primary { background: #4b6bfb; color: #fff; }
+  .btn-primary:hover { background: #3a55d4; }
+  .btn-secondary { background: #26262b; color: #e4e4e7; }
+  .btn-secondary:hover { background: #33333a; }
+  .btn-danger { background: #7f1d1d; color: #fca5a5; }
+  .link { color: #4b6bfb; cursor: pointer; font-size: 13px; text-align: center; margin-top: 14px; display: block; }
+  .error { color: #f87171; font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+  .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .profile-header .avatar { width: 64px; height: 64px; font-size: 24px; }
+  .gear-btn {
+    position: absolute; top: 16px; right: 16px; background: none; border: none;
+    color: #3a3a42; font-size: 16px; cursor: pointer; width: 28px; height: 28px;
+    transition: .3s; display: flex; align-items: center; justify-content: center;
+  }
+  .gear-btn:hover { color: #52525b; transform: rotate(30deg); }
+  .premium-badge {
+    display: inline-block; background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+    background-size: 300% 100%; animation: grad 4s linear infinite;
+    color: #fff; font-size: 11px; padding: 2px 9px; border-radius: 10px;
+    font-weight: 600; margin-left: 8px;
+  }
+  .toast {
+    position: fixed; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1c1c21; border: 1px solid #33333a; color: #e4e4e7; padding: 12px 22px;
+    border-radius: 10px; font-size: 14px; opacity: 0; transition: .3s; z-index: 200;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4); max-width: 90vw; text-align: center;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.premium-toast { border-color: #feca57; background: #241d10; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #33333a; border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* ===== МОБАЙЛ ===== */
+  .mobile-view .sidebar { position: absolute; inset: 0; width: 100%; z-index: 10; border-right: none; }
+  .mobile-view .main {
+    position: absolute; inset: 0; z-index: 20;
+    transform: translateX(100%); transition: transform .25s ease;
+  }
+  .mobile-view.chat-open .main { transform: translateX(0); }
+  .mobile-view .back-btn { display: flex; }
+
+  @media (max-width: 720px) {
+    .sidebar { width: 100%; }
+    .mobile-view .messages { padding: 14px 14px 8px; }
+    .mobile-view .composer {
+      padding: 10px 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      margin-bottom: 6px;
+    }
+    .mobile-view .composer input { padding: 13px 16px; }
+    .mobile-view .send-btn { width: 48px; height: 48px; }
+    .mobile-view .chat-header { padding: 12px 16px; min-height: 58px; }
+    .msg { max-width: 85%; }
+  }
+</style>
 </head>
 <body>
-    <div class="app">
-        <div class="header">
-            <div class="logo">ПЕРЕКУП</div>
-            <div style="display:flex;gap:6px;">
-                <span class="badge badge-balance" id="bal">₽ 1 250 000</span>
-                <span class="badge badge-garage" id="gar">🚗 0</span>
-            </div>
-        </div>
-        <div class="event-banner">⚡ КВАНТОВАЯ ЭЛЕКТРОНИКА ⚡</div>
-        <div class="tabs">
-            <div class="tab active" id="marketTab" onclick="showMarket()">Рынок</div>
-            <div class="tab" id="garageTab" onclick="showGarage()">Гараж</div>
-        </div>
-        <div class="notification" id="notif">
-            <div class="notif-text" id="notifText"></div>
-            <div class="btn-row">
-                <button class="btn btn-success" onclick="acceptNotif()">Принять</button>
-                <button class="btn btn-danger" onclick="declineNotif()">Отклонить</button>
-            </div>
-        </div>
-        <div class="list" id="list"></div>
+
+<div class="app" id="app" style="display:none">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="user-badge" onclick="openProfile()">
+        <div class="avatar" id="myAvatar">?</div>
+        <div class="nickname" id="myNick">...</div>
+      </div>
+      <div style="display:flex; gap:6px">
+        <button class="btn-icon" title="Новый чат" onclick="openNewChat()">+</button>
+        <button class="btn-icon" title="Создать канал" onclick="openNewChannel()">📢</button>
+      </div>
     </div>
-
-    <div class="modal-overlay" id="tradeModal">
-        <div class="modal">
-            <div class="modal-title" id="tradeTitle"></div>
-            <div class="modal-price" id="tradePrice"></div>
-            <div class="modal-msg" id="tradeMsg">Здравствуйте!</div>
-            <input type="number" class="modal-input" id="offerInput" placeholder="Ваша цена (₽)">
-            <div class="btn-row">
-                <button class="btn btn-primary" onclick="makeOffer()">Предложить</button>
-                <button class="btn btn-secondary" id="counterBtn" onclick="acceptCounter()" disabled>Согласиться</button>
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-primary" onclick="buyFull()">Купить</button>
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-secondary" onclick="closeTrade()">Закрыть</button>
-            </div>
-        </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('chats', this)">Чаты</button>
+      <button class="tab" onclick="switchTab('public', this)">Публичные</button>
+      <button class="tab" onclick="switchTab('channels', this)">Каналы</button>
     </div>
+    <div class="chat-list" id="chatList"></div>
+  </aside>
 
-    <div class="modal-overlay" id="sellModal">
-        <div class="modal">
-            <div class="modal-title">Продажа</div>
-            <div class="modal-msg" id="sellMsg"></div>
-            <div class="btn-row">
-                <button class="btn btn-success" onclick="confirmSell()">Выставить</button>
-                <button class="btn btn-secondary" onclick="closeSell()">Отмена</button>
-            </div>
-        </div>
+  <main class="main">
+    <div id="chatHeader" class="chat-header"></div>
+    <div class="messages" id="messages"></div>
+    <div class="composer" id="composer" style="display:none">
+      <input id="msgInput" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
+    <div class="empty" id="emptyState">
+      <div style="font-size:40px">💬</div>
+      <div>Выберите чат или создайте новый</div>
+    </div>
+  </main>
+</div>
 
-    <script>
-        var imgPlaceholder = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="140"><rect width="400" height="140" fill="#e4e6eb"/><text x="200" y="70" font-size="13" fill="#999" text-anchor="middle" dominant-baseline="middle">Фото скоро</text></svg>'
-        );
-        var imgGranta = "https://s.auto.drom.ru/i24301/c/photos/fullsize/lada/granta/lada_granta_1247614.jpg";
-        var imgOka = "https://s.auto.drom.ru/i24301/c/photos/fullsize/lada/oka/lada_oka_1247644.jpg";
+<!-- Модалка: Вход -->
+<div class="overlay" id="loginModal">
+  <div class="modal">
+    <h2>Вход в DarkChat</h2>
+    <label>Никнейм</label>
+    <input id="loginNick" placeholder="Ваш ник" autocomplete="off">
+    <label>Пароль</label>
+    <input id="loginPass" type="password" placeholder="Пароль">
+    <div class="error" id="loginError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="doLogin()">Войти</button>
+      <button class="btn btn-secondary" onclick="showRegister()">Регистрация</button>
+    </div>
+  </div>
+</div>
 
-        var cars = [
-            {id:101, name:"Quantum Tesla", price:5000000, oldPrice:10000000, isEvent:true, img:imgPlaceholder},
-            {id:102, name:"Photon BMW", price:3500000, oldPrice:7000000, isEvent:true, img:imgPlaceholder},
-            {id:103, name:"Electron Audi", price:2800000, oldPrice:5600000, isEvent:true, img:imgPlaceholder},
-            {id:104, name:"Neutron Porsche", price:4500000, oldPrice:9000000, isEvent:true, img:imgPlaceholder},
-            {id:105, name:"Proton Mercedes", price:3800000, oldPrice:7600000, isEvent:true, img:imgPlaceholder},
-            {id:1, name:"Lada Granta", price:850000, isEvent:false, img:imgGranta},
-            {id:2, name:"ВАЗ-1111 (Ока)", price:150000, isEvent:false, img:imgOka},
-            {id:3, name:"Kia Rio", price:1100000, isEvent:false, img:imgPlaceholder},
-            {id:4, name:"Hyundai Solaris", price:1050000, isEvent:false, img:imgPlaceholder},
-            {id:5, name:"Volkswagen Polo", price:1150000, isEvent:false, img:imgPlaceholder},
-            {id:6, name:"Toyota Camry", price:1950000, isEvent:false, img:imgPlaceholder},
-            {id:7, name:"BMW 3 series", price:2800000, isEvent:false, img:imgPlaceholder},
-            {id:8, name:"Mercedes C-Class", price:3100000, isEvent:false, img:imgPlaceholder},
-            {id:9, name:"Audi A4", price:2700000, isEvent:false, img:imgPlaceholder},
-            {id:10, name:"Skoda Octavia", price:1350000, isEvent:false, img:imgPlaceholder},
-            {id:11, name:"Renault Logan", price:780000, isEvent:false, img:imgPlaceholder},
-            {id:12, name:"Ford Focus", price:1200000, isEvent:false, img:imgPlaceholder},
-            {id:13, name:"Mazda 6", price:1700000, isEvent:false, img:imgPlaceholder},
-            {id:14, name:"Nissan Qashqai", price:1550000, isEvent:false, img:imgPlaceholder},
-            {id:15, name:"Mitsubishi Outlander", price:1900000, isEvent:false, img:imgPlaceholder},
-            {id:16, name:"Honda CR-V", price:2200000, isEvent:false, img:imgPlaceholder},
-            {id:17, name:"Subaru Forester", price:2400000, isEvent:false, img:imgPlaceholder},
-            {id:18, name:"Lexus ES", price:3400000, isEvent:false, img:imgPlaceholder},
-            {id:19, name:"Volvo XC60", price:3600000, isEvent:false, img:imgPlaceholder},
-            {id:20, name:"Jeep Grand Cherokee", price:4200000, isEvent:false, img:imgPlaceholder},
-            {id:21, name:"Porsche Macan", price:6000000, isEvent:false, img:imgPlaceholder},
-            {id:22, name:"Yamaha R1", price:1600000, isEvent:false, img:imgPlaceholder},
-            {id:23, name:"Harley-Davidson", price:1400000, isEvent:false, img:imgPlaceholder},
-            {id:24, name:"Toyota Yaris", price:400000, isEvent:false, img:imgPlaceholder},
-            {id:25, name:"Нива Travel", price:500000, isEvent:false, img:imgPlaceholder},
-            {id:26, name:"Suzuki", price:300000, isEvent:false, img:imgPlaceholder},
-            {id:27, name:"Мопед Альфа", price:76000, isEvent:false, img:imgPlaceholder},
-            {id:28, name:"ИЖ Юпитер", price:200000, isEvent:false, img:imgPlaceholder},
-            {id:29, name:"Skoda Octavia", price:1000000, isEvent:false, img:imgPlaceholder},
-            {id:30, name:"Минск ММВЗ", price:150000, isEvent:false, img:imgPlaceholder},
-            {id:31, name:"BMW X5", price:4500000, isEvent:false, img:imgPlaceholder}
-        ];
+<!-- Модалка: Регистрация -->
+<div class="overlay" id="registerModal">
+  <div class="modal">
+    <h2>Регистрация</h2>
+    <label>Никнейм (мин. 3 символа)</label>
+    <input id="regNick" placeholder="Придумайте ник" autocomplete="off">
+    <label>Пароль (мин. 4 символа)</label>
+    <input id="regPass" type="password" placeholder="Пароль">
+    <div class="error" id="regError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="doRegister()">Создать аккаунт</button>
+      <button class="btn btn-secondary" onclick="showLogin()">Назад</button>
+    </div>
+  </div>
+</div>
 
-        var balance = 1250000;
-        var garage = 0;
-        var sold = [];
-        var owned = [];
-        var forSale = [];
-        var currentTab = "market";
-        var currentCar = null;
-        var counterPrice = null;
-        var notifData = null;
+<!-- Модалка: Профиль -->
+<div class="overlay" id="profileModal">
+  <div class="modal">
+    <button class="gear-btn" id="gearBtn" title="Настройки" onclick="gearClick()">⚙</button>
+    <h2>Мой профиль</h2>
+    <div class="profile-header">
+      <div class="avatar" id="profAvatar">?</div>
+      <div>
+        <div class="nickname" id="profNick" style="font-size:17px">...</div>
+        <div style="font-size:12px; color:#71717a; margin-top:4px" id="profStatus"></div>
+      </div>
+    </div>
+    <label>Новый никнейм</label>
+    <input id="newNick" placeholder="Оставьте пустым, чтобы не менять">
+    <div class="error" id="profError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal('profileModal')">Закрыть</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+</div>
 
-        function fmt(p) { return "₽ " + p.toLocaleString("ru-RU"); }
+<!-- Модалка: Новый чат -->
+<div class="overlay" id="newChatModal">
+  <div class="modal">
+    <h2>Новый чат</h2>
+    <label>Никнейм собеседника</label>
+    <input id="chatWithNick" placeholder="Введите ник пользователя">
+    <div class="error" id="newChatError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="createChat()">Создать</button>
+      <button class="btn btn-secondary" onclick="closeModal('newChatModal')">Отмена</button>
+    </div>
+  </div>
+</div>
 
-        function updateUI() {
-            document.getElementById("bal").textContent = fmt(balance);
-            document.getElementById("gar").textContent = "🚗 " + garage;
-            renderList();
-        }
+<!-- Модалка: Новый канал -->
+<div class="overlay" id="newChannelModal">
+  <div class="modal">
+    <h2>Создать канал</h2>
+    <label>Название канала</label>
+    <input id="channelName" placeholder="Например: Новости">
+    <label>Описание</label>
+    <input id="channelDesc" placeholder="О чём канал?">
+    <div class="error" id="newChannelError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="createChannel()">Создать</button>
+      <button class="btn btn-secondary" onclick="closeModal('newChannelModal')">Отмена</button>
+    </div>
+  </div>
+</div>
 
-        function showMarket() {
-            currentTab = "market";
-            document.getElementById("marketTab").classList.add("active");
-            document.getElementById("garageTab").classList.remove("active");
-            renderList();
-        }
+<div class="toast" id="toast"></div>
 
-        function showGarage() {
-            currentTab = "garage";
-            document.getElementById("garageTab").classList.add("active");
-            document.getElementById("marketTab").classList.remove("active");
-            renderList();
-        }
+<script>
+/* ==================== ХРАНИЛИЩЕ ==================== */
+const DB = {
+  get(k) { try { return JSON.parse(localStorage.getItem('dc_' + k)); } catch { return null; } },
+  set(k, v) { localStorage.setItem('dc_' + k, JSON.stringify(v)); }
+};
 
-        function renderList() {
-            var list = document.getElementById("list");
-            list.innerHTML = "";
-            
-            if (currentTab === "market") {
-                for (var i = 0; i < cars.length; i++) {
-                    if (sold.indexOf(cars[i].id) !== -1) continue;
-                    
-                    var card = document.createElement("div");
-                    card.className = "card" + (cars[i].isEvent ? " event" : "");
-                    
-                    var oldPriceHtml = "";
-                    if (cars[i].isEvent) {
-                        oldPriceHtml = '<span class="card-old-price">' + fmt(cars[i].oldPrice) + '</span><span class="discount">-50%</span>';
-                    }
-                    
-                    card.innerHTML = 
-                        '<img src="' + cars[i].img + '" class="card-img" alt="">' +
-                        '<div class="card-body">' +
-                            '<div class="card-title">' + cars[i].name + '</div>' +
-                            '<div class="card-price-row">' +
-                                '<span class="card-price">' + fmt(cars[i].price) + '</span>' +
-                                oldPriceHtml +
-                            '</div>' +
-                            '<button class="btn btn-primary" onclick="openTrade(' + cars[i].id + ')">Купить</button>' +
-                        '</div>';
-                    list.appendChild(card);
-                }
-            } else {
-                if (owned.length === 0) {
-                    list.innerHTML = '<div class="empty">Гараж пуст</div>';
-                } else {
-                    for (var j = 0; j < owned.length; j++) {
-                        var isSale = forSale.indexOf(owned[j].id) !== -1;
-                        var card2 = document.createElement("div");
-                        card2.className = "card";
-                        card2.innerHTML = 
-                            '<div class="card-body">' +
-                                '<div class="card-title">' + owned[j].name + '</div>' +
-                                '<div class="card-price">' + fmt(owned[j].price) + '</div>' +
-                                (isSale ? '<span style="color:#999;font-size:13px;">Ожидание</span>' : 
-                                '<button class="btn btn-success" onclick="openSell(' + owned[j].id + ')">Продать</button>') +
-                            '</div>';
-                        list.appendChild(card2);
-                    }
-                }
-            }
-        }
+let state = {
+  users: DB.get('users') || {},
+  chats: DB.get('chats') || [],
+  messages: DB.get('messages') || {},
+  channels: DB.get('channels') || [],
+  currentUser: DB.get('currentUser') || null,
+  activeChat: null,
+  activeType: 'chat',
+  currentTab: 'chats',
+  isMobile: window.innerWidth <= 720
+};
 
-        function openTrade(id) {
-            for (var i = 0; i < cars.length; i++) {
-                if (cars[i].id === id) { currentCar = cars[i]; break; }
-            }
-            counterPrice = null;
-            document.getElementById("tradeTitle").textContent = currentCar.name;
-            document.getElementById("tradePrice").textContent = "Цена: " + fmt(currentCar.price);
-            document.getElementById("tradeMsg").textContent = "Здравствуйте!";
-            document.getElementById("offerInput").value = "";
-            document.getElementById("counterBtn").disabled = true;
-            document.getElementById("tradeModal").classList.add("show");
-        }
+function save() {
+  DB.set('users', state.users);
+  DB.set('chats', state.chats);
+  DB.set('messages', state.messages);
+  DB.set('channels', state.channels);
+  DB.set('currentUser', state.currentUser);
+}
 
-        function closeTrade() { document.getElementById("tradeModal").classList.remove("show"); }
+/* ==================== УТИЛИТЫ ==================== */
+function toast(text, premium) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.className = 'toast show' + (premium ? ' premium-toast' : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
 
-        function makeOffer() {
-            var offer = parseInt(document.getElementById("offerInput").value);
-            if (!offer || offer <= 0) { document.getElementById("tradeMsg").textContent = "Введите цену!"; return; }
-            var asking = currentCar.price;
-            var ratio = offer / asking;
-            if (offer >= asking) { buy(offer); }
-            else if (ratio >= 0.93) { buy(offer); }
-            else if (ratio >= 0.8) {
-                counterPrice = Math.round(asking * 0.93);
-                document.getElementById("tradeMsg").textContent = "Чуть выше? " + fmt(counterPrice);
-                document.getElementById("counterBtn").disabled = false;
-            }
-            else if (ratio >= 0.6) {
-                counterPrice = Math.round(asking * 0.9);
-                document.getElementById("tradeMsg").textContent = "Могу уступить до " + fmt(counterPrice);
-                document.getElementById("counterBtn").disabled = false;
-            }
-            else {
-                counterPrice = Math.round(asking * 0.95);
-                document.getElementById("tradeMsg").textContent = "Слишком низко! Минимум " + fmt(counterPrice);
-                document.getElementById("counterBtn").disabled = false;
-            }
-        }
+function initials(nick) { return nick.slice(0, 2).toUpperCase(); }
 
-        function acceptCounter() { if (counterPrice) buy(counterPrice); }
-        function buyFull() { buy(currentCar.price); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
-        function buy(price) {
-            if (balance < price) { document.getElementById("tradeMsg").textContent = "Недостаточно средств!"; return; }
-            balance -= price;
-            garage++;
-            sold.push(currentCar.id);
-            owned.push({id: currentCar.id, name: currentCar.name, price: currentCar.price});
-            document.getElementById("tradeMsg").textContent = "Куплено!";
-            document.getElementById("counterBtn").disabled = true;
-            updateUI();
-        }
+function timeNow() {
+  return new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
 
-        function openSell(id) {
-            for (var i = 0; i < owned.length; i++) { if (owned[i].id === id) { currentCar = owned[i]; break; } }
-            document.getElementById("sellMsg").textContent = "Выставить " + currentCar.name + "?";
-            document.getElementById("sellModal").classList.add("show");
-        }
+/* ==================== МОБАЙЛ-РЕЖИМ ==================== */
+function updateMobileMode() {
+  state.isMobile = window.innerWidth <= 720;
+  const app = document.getElementById('app');
+  if (state.isMobile) {
+    app.classList.add('mobile-view');
+    if (state.activeChat) app.classList.add('chat-open');
+    else app.classList.remove('chat-open');
+  } else {
+    app.classList.remove('mobile-view');
+    app.classList.remove('chat-open');
+  }
+}
+window.addEventListener('resize', updateMobileMode);
 
-        function closeSell() { document.getElementById("sellModal").classList.remove("show"); }
+function goBackToList() {
+  const app = document.getElementById('app');
+  app.classList.remove('chat-open');
+  state.activeChat = null;
+  state.activeType = 'chat';
+  renderChatList(state.currentTab);
+  showEmpty();
+}
 
-        function confirmSell() {
-            forSale.push(currentCar.id);
-            var carForSale = currentCar;
-            closeSell();
-            updateUI();
-            var mult = 0.95 + Math.random() * 0.2;
-            var offerPrice = Math.round(carForSale.price * mult);
-            notifData = {id: carForSale.id, name: carForSale.name, price: offerPrice};
-            document.getElementById("notifText").textContent = "Покупатель предлагает " + fmt(offerPrice) + " за " + carForSale.name;
-            document.getElementById("notif").classList.add("show");
-        }
+/* ==================== АВТОРИЗАЦИЯ ==================== */
+function showLogin() {
+  document.getElementById('loginModal').classList.add('show');
+  document.getElementById('registerModal').classList.remove('show');
+}
+function showRegister() {
+  document.getElementById('registerModal').classList.add('show');
+  document.getElementById('loginModal').classList.remove('show');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        function acceptNotif() {
-            if (!notifData) return;
-            balance += notifData.price;
-            garage--;
-            owned = owned.filter(function(c) { return c.id !== notifData.id; });
-            forSale = forSale.filter(function(id) { return id !== notifData.id; });
-            document.getElementById("notif").classList.remove("show");
-            notifData = null;
-            updateUI();
-        }
+function doRegister() {
+  const nick = document.getElementById('regNick').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const err = document.getElementById('regError');
+  err.textContent = '';
 
-        function declineNotif() {
-            if (!notifData) return;
-            forSale = forSale.filter(function(id) { return id !== notifData.id; });
-            document.getElementById("notif").classList.remove("show");
-            notifData = null;
-            updateUI();
-        }
+  if (nick.length < 3) { err.textContent = 'Ник должен быть минимум 3 символа'; return; }
+  if (pass.length < 4) { err.textContent = 'Пароль минимум 4 символа'; return; }
+  if (state.users[nick.toLowerCase()]) { err.textContent = 'Этот ник уже занят'; return; }
 
-        updateUI();
-    </script>
+  state.users[nick.toLowerCase()] = {
+    nick: nick, pass: pass, premium: false, createdAt: Date.now()
+  };
+  state.currentUser = nick;
+  save();
+  closeModal('registerModal');
+  enterApp();
+}
+
+function doLogin() {
+  const nick = document.getElementById('loginNick').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+
+  const user = state.users[nick.toLowerCase()];
+  if (!user) { err.textContent = 'Пользователь не найден'; return; }
+  if (user.pass !== pass) { err.textContent = 'Неверный пароль'; return; }
+
+  state.currentUser = user.nick;
+  save();
+  closeModal('loginModal');
+  enterApp();
+}
+
+function logout() {
+  state.currentUser = null;
+  state.activeChat = null;
+  save();
+  closeModal('profileModal');
+  document.getElementById('app').style.display = 'none';
+  showLogin();
+}
+
+function enterApp() {
+  document.getElementById('app').style.display = 'flex';
+  state.activeChat = null;
+  updateMobileMode();
+  renderUser();
+  renderChatList('chats');
+  showEmpty();
+}
+
+/* ==================== РЕНДЕР ПОЛЬЗОВАТЕЛЯ ==================== */
+function getUser(nick) { return state.users[nick.toLowerCase()]; }
+
+function renderUser() {
+  const u = getUser(state.currentUser);
+  if (!u) return;
+  const av = document.getElementById('myAvatar');
+  const nk = document.getElementById('myNick');
+  av.textContent = initials(u.nick);
+  nk.textContent = u.nick;
+  if (u.premium) { av.classList.add('premium'); nk.classList.add('premium'); }
+  else { av.classList.remove('premium'); nk.classList.remove('premium'); }
+}
+
+/* ==================== ПРОФИЛЬ ==================== */
+function openProfile() {
+  const u = getUser(state.currentUser);
+  const av = document.getElementById('profAvatar');
+  const nk = document.getElementById('profNick');
+  av.textContent = initials(u.nick);
+  nk.textContent = u.nick;
+  document.getElementById('newNick').value = '';
+
+  const status = document.getElementById('profStatus');
+  status.innerHTML = u.premium
+    ? '<span class="premium-badge">PREMIUM</span>'
+    : 'Обычный аккаунт';
+
+  const badge = document.querySelector('#profileModal .premium-badge');
+  if (u.premium) {
+    av.classList.add('premium');
+    nk.className = 'nickname premium';
+    nk.style.fontSize = '17px';
+    if (!badge) {
+      const b = document.createElement('span');
+      b.className = 'premium-badge';
+      b.textContent = 'PREMIUM';
+      nk.parentElement.appendChild(b);
+    }
+  } else {
+    av.classList.remove('premium');
+    nk.className = 'nickname';
+    nk.style.fontSize = '17px';
+    if (badge) badge.remove();
+  }
+
+  document.getElementById('gearBtn').dataset.clicks = '0';
+  document.getElementById('profileModal').classList.add('show');
+}
+
+function saveProfile() {
+  const newNick = document.getElementById('newNick').value.trim();
+  const err = document.getElementById('profError');
+  err.textContent = '';
+
+  if (!newNick) { closeModal('profileModal'); return; }
+  if (newNick.length < 3) { err.textContent = 'Ник минимум 3 символа'; return; }
+  if (newNick.toLowerCase() === state.currentUser.toLowerCase()) { err.textContent = 'Это ваш текущий ник'; return; }
+  if (state.users[newNick.toLowerCase()]) { err.textContent = 'Ник уже занят'; return; }
+
+  const u = getUser(state.currentUser);
+  const oldNick = u.nick;
+
+  delete state.users[oldNick.toLowerCase()];
+  u.nick = newNick;
+  state.users[newNick.toLowerCase()] = u;
+  state.currentUser = newNick;
+
+  state.chats.forEach(c => {
+    if (c.a === oldNick) c.a = newNick;
+    if (c.b === oldNick) c.b = newNick;
+  });
+  state.channels.forEach(c => {
+    if (c.owner === oldNick) c.owner = newNick;
+  });
+
+  save();
+  renderUser();
+  renderChatList(state.currentTab);
+  closeModal('profileModal');
+  toast('Профиль обновлён');
+}
+
+/* ===== СЕКРЕТНАЯ ПРЕМИУМ-СИСТЕМА ===== */
+let gearClicks = 0;
+function gearClick() {
+  gearClicks++;
+  const u = getUser(state.currentUser);
+
+  if (gearClicks >= 5 && !u.premium) {
+    u.premium = true;
+    save();
+    renderUser();
+    openProfile();
+    toast('🎉 PREMIUM активирован! Ник теперь переливается.', true);
+    gearClicks = 0;
+    return;
+  }
+
+  if (u.premium) {
+    toast('Вы уже Premium ✨', true);
+    gearClicks = 0;
+    return;
+  }
+
+  if (gearClicks > 0 && gearClicks < 5) toast('⚙ ' + gearClicks + '/5...');
+}
+
+/* ==================== ЧАТЫ ==================== */
+function switchTab(tab, btn) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderChatList(tab);
+}
+
+function getChatId(a, b) { return [a.toLowerCase(), b.toLowerCase()].sort().join('|'); }
+
+function renderChatList(tab = 'chats') {
+  const list = document.getElementById('chatList');
+  list.innerHTML = '';
+
+  if (tab === 'chats') {
+    const myChats = state.chats.filter(c =>
+      c.a.toLowerCase() === state.currentUser.toLowerCase() ||
+      c.b.toLowerCase() === state.currentUser.toLowerCase()
+    );
+    if (!myChats.length) {
+      list.innerHTML = '<div class="empty-list">Пока нет чатов.<br>Нажмите + чтобы начать</div>';
+      return;
+    }
+    myChats.forEach(c => {
+      const other = c.a.toLowerCase() === state.currentUser.toLowerCase() ? c.b : c.a;
+      const msgs = state.messages[c.id] || [];
+      const last = msgs[msgs.length - 1];
+      const otherUser = getUser(other);
+      const isPrem = otherUser && otherUser.premium;
+      const div = document.createElement('div');
+      div.className = 'chat-item' + (state.activeChat === c.id && state.activeType === 'chat' ? ' active' : '');
+      div.onclick = () => openChat(c.id, other, 'chat');
+      div.innerHTML = `
+        <div class="avatar ${isPrem ? 'premium' : ''}">${initials(other)}</div>
+        <div class="chat-info">
+          <div class="chat-name ${isPrem ? 'premium' : ''}">${escapeHtml(other)}</div>
+          <div class="chat-last">${last ? escapeHtml(last.author === state.currentUser ? 'Вы: ' + last.text : last.text) : 'Нет сообщений'}</div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } else if (tab === 'public') {
+    // ВСЕ зарегистрированные пользователи (кроме себя)
+    const allUsers = Object.values(state.users).filter(
+      u => u.nick.toLowerCase() !== state.currentUser.toLowerCase()
+    );
+    if (!allUsers.length) {
+      list.innerHTML = '<div class="empty-list">Пока нет других пользователей</div>';
+      return;
+    }
+    allUsers.forEach(u => {
+      const isPrem = u.premium;
+      const div = document.createElement('div');
+      div.className = 'chat-item';
+      div.onclick = () => openUserChat(u.nick);
+      div.innerHTML = `
+        <div class="avatar ${isPrem ? 'premium' : ''}">${initials(u.nick)}</div>
+        <div class="chat-info">
+          <div class="chat-name ${isPrem ? 'premium' : ''}">${escapeHtml(u.nick)}</div>
+          <div class="chat-last">${isPrem ? '✨ Premium' : 'Пользователь'}</div>
+        </div>
+        <span class="badge public">юзер</span>
+      `;
+      list.appendChild(div);
+    });
+  } else {
+    if (!state.channels.length) {
+      list.innerHTML = '<div class="empty-list">Нет каналов.<br>Создайте первый!</div>';
+      return;
+    }
+    state.channels.forEach(ch => {
+      const div = document.createElement('div');
+      div.className = 'chat-item' + (state.activeChat === ch.id && state.activeType === 'channel' ? ' active' : '');
+      div.onclick = () => openChannel(ch.id);
+      div.innerHTML = `
+        <div class="avatar" style="background:#3a2e10; color:#feca57">📢</div>
+        <div class="chat-info">
+          <div class="chat-name">${escapeHtml(ch.name)} <span class="badge channel">канал</span></div>
+          <div class="chat-last">${escapeHtml(ch.desc || 'Без описания')}</div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  }
+}
+
+/* Открыть чат с пользователем из вкладки "Публичные" */
+function openUserChat(nick) {
+  const id = getChatId(state.currentUser, nick);
+  if (!state.chats.find(c => c.id === id)) {
+    state.chats.push({ id, a: state.currentUser, b: nick, createdAt: Date.now() });
+    save();
+  }
+  openChat(id, nick, 'chat');
+}
+
+function openNewChat() { document.getElementById('newChatModal').classList.add('show'); }
+function openNewChannel() { document.getElementById('newChannelModal').classList.add('show'); }
+
+function createChat() {
+  const nick = document.getElementById('chatWithNick').value.trim();
+  const err = document.getElementById('newChatError');
+  err.textContent = '';
+
+  if (!nick) { err.textContent = 'Введите ник'; return; }
+  if (nick.toLowerCase() === state.currentUser.toLowerCase()) { err.textContent = 'Нельзя создать чат с собой'; return; }
+  const target = getUser(nick);
+  if (!target) { err.textContent = 'Пользователь не найден'; return; }
+
+  const id = getChatId(state.currentUser, target.nick);
+  if (!state.chats.find(c => c.id === id)) {
+    state.chats.push({ id, a: state.currentUser, b: target.nick, createdAt: Date.now() });
+    save();
+  }
+  closeModal('newChatModal');
+  state.currentTab = 'chats';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab').classList.add('active');
+  renderChatList('chats');
+  openChat(id, target.nick, 'chat');
+}
+
+function createChannel() {
+  const name = document.getElementById('channelName').value.trim();
+  const desc = document.getElementById('channelDesc').value.trim();
+  const err = document.getElementById('newChannelError');
+  err.textContent = '';
+
+  if (name.length < 2) { err.textContent = 'Название минимум 2 символа'; return; }
+
+  const id = 'ch_' + Date.now();
+  state.channels.push({ id, name, desc, owner: state.currentUser, createdAt: Date.now() });
+  save();
+  closeModal('newChannelModal');
+  state.currentTab = 'channels';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[2].classList.add('active');
+  renderChatList('channels');
+  toast('Канал создан');
+}
+
+/* ==================== ОТКРЫТИЕ ЧАТА ==================== */
+function openChat(id, otherNick, type) {
+  state.activeChat = id;
+  state.activeType = type;
+
+  const app = document.getElementById('app');
+  if (state.isMobile) app.classList.add('chat-open');
+
+  renderChatList(state.currentTab);
+
+  const other = getUser(otherNick);
+  const isPrem = other && other.premium;
+
+  document.getElementById('chatHeader').innerHTML = `
+    <button class="back-btn" onclick="goBackToList()">←</button>
+    <div class="avatar ${isPrem ? 'premium' : ''}">${initials(otherNick)}</div>
+    <div>
+      <div class="chat-name ${isPrem ? 'premium' : ''}" style="font-size:15px">${escapeHtml(otherNick)}</div>
+      <div style="font-size:12px; color:#71717a">${isPrem ? '✨ Premium' : 'в сети'}</div>
+    </div>
+  `;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('composer').style.display = 'flex';
+  renderMessages();
+}
+
+function openChannel(id) {
+  const ch = state.channels.find(c => c.id === id);
+  if (!ch) return;
+  state.activeChat = id;
+  state.activeType = 'channel';
+
+  const app = document.getElementById('app');
+  if (state.isMobile) app.classList.add('chat-open');
+
+  renderChatList('channels');
+
+  document.getElementById('chatHeader').innerHTML = `
+    <button class="back-btn" onclick="goBackToList()">←</button>
+    <div class="avatar" style="background:#3a2e10; color:#feca57">📢</div>
+    <div>
+      <div style="font-size:15px; font-weight:500">${escapeHtml(ch.name)}</div>
+      <div style="font-size:12px; color:#71717a">${escapeHtml(ch.desc || 'Канал')} · ${escapeHtml(ch.owner)}</div>
+    </div>
+  `;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('composer').style.display = 'flex';
+  renderMessages();
+}
+
+function renderMessages() {
+  const box = document.getElementById('messages');
+  const msgs = state.messages[state.activeChat] || [];
+  box.innerHTML = '';
+
+  if (!msgs.length) {
+    box.innerHTML = '<div style="text-align:center; color:#52525b; font-size:13px; margin-top:30px">Нет сообщений. Напишите первым!</div>';
+    return;
+  }
+
+  msgs.forEach(m => {
+    const u = getUser(m.author);
+    const isPrem = u && u.premium;
+    const own = m.author.toLowerCase() === state.currentUser.toLowerCase();
+    const div = document.createElement('div');
+    div.className = 'msg' + (own ? ' own' : '');
+    div.innerHTML = `
+      ${!own ? `<div class="avatar ${isPrem ? 'premium' : ''}" style="width:32px;height:32px;font-size:13px">${initials(m.author)}</div>` : ''}
+      <div>
+        ${!own ? `<div class="msg-author ${isPrem ? 'premium' : ''}">${escapeHtml(m.author)}</div>` : ''}
+        <div class="bubble">${escapeHtml(m.text)}</div>
+        <div class="msg-meta" style="${own ? 'text-align:right' : ''}">${m.time}</div>
+      </div>
+    `;
+    box.appendChild(div);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text || !state.activeChat) return;
+
+  if (!state.messages[state.activeChat]) state.messages[state.activeChat] = [];
+  state.messages[state.activeChat].push({
+    author: state.currentUser,
+    text,
+    time: timeNow()
+  });
+
+  input.value = '';
+  save();
+  renderMessages();
+  renderChatList(state.currentTab);
+}
+
+function showEmpty() {
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('composer').style.display = 'none';
+  document.getElementById('chatHeader').innerHTML = '';
+}
+
+/* ==================== СТАРТ ==================== */
+(function init() {
+  updateMobileMode();
+  if (state.currentUser && getUser(state.currentUser)) {
+    enterApp();
+  } else {
+    showLogin();
+  }
+})();
+</script>
 </body>
 </html>
